@@ -334,10 +334,12 @@ void *start_cpu(void *arg)
                         exit(ret);
                 }
 	        pthread_barrier_wait(&start_barrier);
+                // use cpu index 1 to receiving network packets
                 do_networking();
         } else {
 	        started_cpus++;
 	        pthread_barrier_wait(&start_barrier);
+                // use other cpus to process packets
                 do_work();
         }
 
@@ -427,6 +429,7 @@ int main(int argc, char *argv[])
         }
         log_info("init done\n");
 
+        /* The main thread do packets dispatching */
         do_dispatching(CFG.num_cpus);
 	log_info("finished handling contexts, looping forever...\n");
 	return 0;

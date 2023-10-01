@@ -109,10 +109,13 @@ static inline void handle_worker(int i, uint64_t cur_time)
 {
         if (worker_responses[i].flag != RUNNING) {
                 if (worker_responses[i].flag == FINISHED) {
+                        /* free the processed packet */
                         handle_finished(i);
                 } else if (worker_responses[i].flag == PREEMPTED) {
+                        /* re-enqueue the preempted request to the tail of the queue */
                         handle_preempted(i);
                 }
+                /* dispatch a new request to worker i if worker i is not in RUNNING state*/
                 dispatch_request(i, cur_time);
         } else
                 preempt_worker(i, cur_time);
@@ -139,12 +142,19 @@ static inline void handle_networker(uint64_t cur_time)
                 }
 
                 for (i = 0; i < ETH_RX_MAX_BATCH; i++) {
+                        /* these packets need to free because system failed to allocate context
+                           to them 
+                         */
                         struct mbuf * buf = mbuf_dequeue(&mqueue);
                         if (!buf)
                                 break;
                         networker_pointers.pkts[i] = buf;
                         networker_pointers.free_cnt++;
                 }
+                /* set networker_pointers.cnt to 0 indicates the dipatcher thread enqueued all
+                   packets to the task queue, so the network thread can receive the next batch
+                   of packets 
+                 */
                 networker_pointers.cnt = 0;
         }
 }
@@ -162,8 +172,12 @@ void do_dispatching(int num_cpus)
 
         while(1) {
                 cur_time = rdtsc();
+                /* Iterate workers and give it a new packet to handle if it is free or preempt it if the current
+                 * runs longer than 5us
+                 */
                 for (i = 0; i < num_cpus - 2; i++)
                         handle_worker(i, cur_time);
+                /* get all packets from networker_pointers.pkts[] and enqueue them to the tail of tskq */
                 handle_networker(cur_time);
         }
 }

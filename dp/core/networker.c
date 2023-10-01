@@ -54,6 +54,8 @@ void do_networking(void)
                 if (num_recv == 0)
                         continue;
                 while (networker_pointers.cnt != 0);
+                // free mbuf data that cannot allocate a context for it, 
+                // such data just drop it
                 for (i = 0; i < networker_pointers.free_cnt; i++) {
                         mbuf_free(networker_pointers.pkts[i]);
                 }

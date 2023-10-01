@@ -236,8 +236,11 @@ static inline void handle_context(void)
 
 static inline void handle_request(void)
 {
+        /* wait for dispatcher thread to assign a packet to process */
         while (dispatcher_requests[cpu_nr_].flag == WAITING);
+        /* Set flag to WAITING to wait for a new packet */
         dispatcher_requests[cpu_nr_].flag = WAITING;
+        /* Get a new packet, handle it */
         if (dispatcher_requests[cpu_nr_].category == PACKET)
                 handle_new_packet();
         else

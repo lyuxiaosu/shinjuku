@@ -33,10 +33,10 @@
 #define WAITING     0x00
 #define ACTIVE      0x01
 
-#define RUNNING     0x00
-#define FINISHED    0x01
-#define PREEMPTED   0x02
-#define PROCESSED   0x03
+#define RUNNING     0x00  // the packet is in processing
+#define FINISHED    0x01  // the packet is finished 
+#define PREEMPTED   0x02  // the packet is preempt but not finished
+#define PROCESSED   0x03  // the packet is processed but preempted 
 
 #define NOCONTENT   0x00
 #define PACKET      0x01
